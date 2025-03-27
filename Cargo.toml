@@ -1,0 +1,9 @@
+[package]
+name = "cg_ss_25"
+version = "0.0.1"
+authors = ["Paul Menhart"]
+edition = "2021"
+
+[dependencies]
+
+[dev-dependencies]
