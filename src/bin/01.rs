@@ -11,17 +11,13 @@ pub struct Point {
 fn ccw(p: &Point, q: &Point, r: &Point) -> i32 {
     let ccw = p.x * q.y - p.y * q.x + q.x * r.y - q.y * r.x + p.y * r.x - p.x * r.y;
 
-    let result;
     if ccw < -EPSILON {
-        result = -1;
+        -1
     } else if ccw < EPSILON {
-        result = 0;
+        0
     } else {
-        result = 1;
+        1
     }
-
-    print!(" {:?} ", result);
-    result
 }
 
 impl Point {}
