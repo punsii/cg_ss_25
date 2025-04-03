@@ -8,6 +8,17 @@ pub struct Point {
     pub y: f64,
 }
 
+impl Point {
+    fn is_in_boundary(&self, line: &Line) -> bool {
+        let xmin = f64::min(line.p1.x, line.p2.x);
+        let xmax = f64::max(line.p1.x, line.p2.x);
+        let ymin = f64::min(line.p1.y, line.p2.y);
+        let ymax = f64::max(line.p1.y, line.p2.y);
+
+        self.x >= xmin && self.x <= xmax && self.y >= ymin && self.y <= ymax
+    }
+}
+
 fn ccw(p: &Point, q: &Point, r: &Point) -> i32 {
     let ccw = p.x * q.y - p.y * q.x + q.x * r.y - q.y * r.x + p.y * r.x - p.x * r.y;
 
@@ -49,13 +60,26 @@ impl Line {
         let c = ccw(&self.p1, &self.p2, &other.p1);
         let d = ccw(&self.p1, &self.p2, &other.p2);
 
-        if a != b && c != d {
-            //  This should always be true
-            true
-        } else {
-            //  TODO: this is definitely not always correct!
-            false
+        let h1 = a * b;
+        let h2 = c * d;
+        // a is on the same side as b <=> h = 1
+        if h1 == 1 || h2 == 1 {
+            // at least one line is completely on one side of the other line
+            return false;
         }
+        // a is not on the same side as b <=> h = -1
+        if h1 == -1 && h2 == -1 {
+            // both lines are on both sides of the other line
+            return true;
+        }
+
+        // from here on every possibility has *at least* one point that is 'inline'
+        // if one inline point is also 'in the region' of the line it is 'inline' with,
+        // it has to be touching it
+        a == 0 && self.p1.is_in_boundary(other)
+            || b == 0 && self.p2.is_in_boundary(other)
+            || c == 0 && other.p1.is_in_boundary(self)
+            || d == 0 && other.p2.is_in_boundary(self)
     }
 }
 
