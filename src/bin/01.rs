@@ -67,7 +67,7 @@ impl Line {
             // at least one line is completely on one side of the other line
             return false;
         }
-        // a is not on the same side as b <=> h = -1
+        // a and b are on different sides <=> h = -1
         if h1 == -1 && h2 == -1 {
             // both lines are on both sides of the other line
             return true;
@@ -118,24 +118,22 @@ fn main() {
         lines.push(string_to_line(row))
     }
 
-    let test_line = Line::new(
-        Point {
-            x: -100.0,
-            y: -100.0,
-        },
-        Point { x: 100.0, y: 100.0 },
-    );
-    for line in &lines[0..10] {
-        print!(
-            "({}, {}),  ({}, {})",
-            line.p1.x, line.p1.y, line.p2.x, line.p2.y
-        );
-
-        print!(" {:?} ", line.crosses(&test_line));
-
-        print!(
-            "({}, {}),  ({}, {})\n\n",
-            test_line.p1.x, test_line.p1.y, test_line.p2.x, test_line.p2.y
-        );
+    for i in 0..lines.len() - 1 {
+        for j in i + 1..lines.len() {
+            let line1 = &lines[i];
+            let line2 = &lines[j];
+            print!(
+                "Line1: (({:?},{:?})({:?},{:?}))\n Line2: (({:?},{:?})({:?},{:?}))\n crosses: {:?}\n\n",
+                line1.p1.x,
+                line1.p1.y,
+                line1.p2.x,
+                line1.p2.y,
+                line2.p1.x,
+                line2.p1.y,
+                line2.p2.x,
+                line2.p2.y,
+                line1.crosses(line2)
+            );
+        }
     }
 }
