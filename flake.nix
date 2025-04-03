@@ -28,23 +28,25 @@
         inherit system;
       };
 
+
       cg_ss_25 = pkgs.callPackage ./default.nix { };
+
+      main = {
+        type = "app";
+        program = "${self.packages.${system}.default}/bin/cg_ss_25";
+      };
+      p01 = {
+        type = "app";
+        program = "${self.packages.${system}.default}/bin/01";
+      };
+
     in
     {
       packages.${system}.default = cg_ss_25;
 
-      apps.${system} = rec {
+      apps.${system} = {
+        inherit main p01;
         default = main;
-        main = {
-          type = "app";
-          program = "${self.packages.${system}.default}/bin/cg_ss_25";
-        };
-
-        p1 = {
-          type = "app";
-          program = "${self.packages.${system}.default}/bin/01";
-        };
-
       };
 
       devShells.${system} = {
@@ -52,8 +54,14 @@
           buildInputs = with pkgs;
             [
               treefmtEval.config.build.wrapper
-              rust-analyzer
+
+              cargo
+              clippy
+              gcc
               qhull
+              rust-analyzer
+              rustc
+              rustfmt
             ];
         };
       };
