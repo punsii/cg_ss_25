@@ -51,10 +51,10 @@ impl Line {
 
         if a != b && c != d {
             //  This should always be true
-            return true;
+            true
         } else {
             //  TODO: this is definitely not always correct!
-            return false;
+            false
         }
     }
 }
