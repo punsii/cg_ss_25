@@ -8,54 +8,58 @@ pub struct Point {
     pub y: f64,
 }
 
-impl Point {
-    fn ccw(&self, line: &Line) -> i32 {
-        let p1 = &line.p1;
-        let p2 = &line.p2;
+fn ccw(p: &Point, q: &Point, r: &Point) -> i32 {
+    let ccw = p.x * q.y - p.y * q.x + q.x * r.y - q.y * r.x + p.y * r.x - p.x * r.y;
 
-        let ccw = p1.y * self.x - p2.y * self.x + p2.x * self.y - p1.x * self.y - p1.y * p2.x
-            + p1.x * p2.y;
-        if ccw < -EPSILON {
-            return -1;
-        } else if ccw < EPSILON {
-            return 0;
-        } else {
-            return 1;
-        }
+    let result;
+    if ccw < -EPSILON {
+        result = -1;
+    } else if ccw < EPSILON {
+        result = 0;
+    } else {
+        result = 1;
     }
+
+    print!(" {:?} ", result);
+    result
 }
+
+impl Point {}
 
 pub struct Line {
     pub p1: Point,
     pub p2: Point,
-    pub n: Point,
+    pub n: Option<Point>,
 }
 
 impl Line {
     fn new(p1: Point, p2: Point) -> Line {
+        let x = p2.x - p2.y;
+        let y = p1.y - p1.x;
+
         let a = p1.y * p2.x - p1.x * p2.y;
         let n = if a > 0.0 {
-            Point {
-                x: (p2.x - p2.y),
-                y: (p1.y - p1.x),
-            }
+            Point { x, y }
         } else {
-            Point {
-                x: -(p2.x - p2.y),
-                y: -(p1.y - p1.x),
-            }
+            Point { x: -x, y: -y }
         };
 
-        Line { p1, p2, n }
+        Line { p1, p2, n: Some(n) }
     }
 
     fn crosses(&self, other: &Line) -> bool {
-        let a = self.p1.ccw(other);
-        let b = self.p2.ccw(other);
-        let c = other.p2.ccw(self);
-        let d = other.p2.ccw(self);
+        let a = ccw(&other.p1, &other.p2, &self.p1);
+        let b = ccw(&other.p1, &other.p2, &self.p2);
+        let c = ccw(&self.p1, &self.p2, &other.p1);
+        let d = ccw(&self.p1, &self.p2, &other.p2);
 
-        a != b && c != d
+        if a != b && c != d {
+            //  This should always be true
+            return true;
+        } else {
+            //  TODO: this is definitely not always correct!
+            return false;
+        }
     }
 }
 
