@@ -121,9 +121,9 @@ fn main() {
         lines.push(string_to_line(row))
     }
 
-    let mut number_of_crosses:i32 = 0;
+    let mut number_of_crosses = 0;
 
-    let start = SystemTime::now();
+    let timer = SystemTime::now();
     for i in 0..lines.len() - 1 {
         for j in i + 1..lines.len() {
             let line1 = &lines[i];
@@ -132,7 +132,7 @@ fn main() {
             if crosses {
                 number_of_crosses += 1;
             }
-            if (print_each_check) {
+            if print_each_check {
                 print!(
                     "Line1: (({:?},{:?})({:?},{:?}))\n Line2: (({:?},{:?})({:?},{:?}))\n crosses: {:?}\n\n",
                     line1.p1.x,
@@ -148,6 +148,6 @@ fn main() {
             }
         }
     }
-    println!("Time elapsed: {:?}", start.elapsed().unwrap().as_millis());
+    println!("Time elapsed: {:?}", timer.elapsed().unwrap().as_millis());
     println!("Number of crosses: {}", number_of_crosses);
 }
