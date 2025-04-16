@@ -1,5 +1,5 @@
+use std::collections::HashMap;
 use std::fs::read_to_string;
-use std::time::SystemTime;
 
 // use core::f64::EPSILON; // => ~2.3E-16
 const EPSILON: f64 = 1E-12;
@@ -112,42 +112,92 @@ fn read_file_rows(filename: &str) -> Vec<String> {
 }
 
 fn main() {
-    let rows = read_file_rows("../data/01/s_10000_1.dat");
-
-    let print_each_check = false;
-
-    let mut lines: Vec<Line> = Vec::new();
-    for row in rows {
-        lines.push(string_to_line(row))
-    }
-
-    let mut number_of_crosses: i32 = 0;
-
-    let start = SystemTime::now();
-    for i in 0..lines.len() - 1 {
-        for j in i + 1..lines.len() {
-            let line1 = &lines[i];
-            let line2 = &lines[j];
-            let crosses = line1.crosses(line2);
-            if crosses {
-                number_of_crosses += 1;
+    let mut states: HashMap<String, Vec<Vec<Point>>> = HashMap::new();
+    let mut cities: HashMap<String, Point> = HashMap::new();
+    let mut current_id = String::new();
+    let path = "../data/02/DeutschlandMitStaedten.svg";
+    let data = read_file_rows(path);
+    for mut line in data {
+        line = line.trim().to_string();
+        if line.contains("id=") {
+            current_id = line.split("id=").nth(1).unwrap()
+                             .split(" ").nth(0).unwrap()
+                             .replace("\"", "")
+                             .parse().unwrap();
+            if line.contains("path") {
+                states.insert(current_id.clone(), Vec::new());
+            } else {
+                cities.insert(current_id.clone(), Point{ x: 0.0, y: 0.0 });
             }
-            if print_each_check {
-                print!(
-                    "Line1: (({:?},{:?})({:?},{:?}))\n Line2: (({:?},{:?})({:?},{:?}))\n crosses: {:?}\n\n",
-                    line1.p1.x,
-                    line1.p1.y,
-                    line1.p2.x,
-                    line1.p2.y,
-                    line2.p1.x,
-                    line2.p1.y,
-                    line2.p2.x,
-                    line2.p2.y,
-                    crosses
-                );
+        }
+        if line.starts_with("M") {
+            states.get_mut(&current_id).unwrap().push(Vec::new());
+            let coords = line[1..].split(",").collect::<Vec<&str>>();
+            let point = Point {
+                x: coords[0].parse().unwrap(),
+                y: coords[1].parse().unwrap()
+            };
+            if let Some(state_vec) = states.get_mut(&current_id) {
+                if let Some(last_vec) = state_vec.last_mut() {
+                    last_vec.push(point);
+                }
+            }
+        }
+        if line.starts_with("l") {
+            let coords = line[1..].split(",").collect::<Vec<&str>>();
+            let last_point = states.get(&current_id).unwrap().last().unwrap().last().unwrap();
+            let point = Point {
+                x: last_point.x + coords[0].parse::<f64>().unwrap(),
+                y: last_point.y + coords[1].parse::<f64>().unwrap(),
+            };
+            if let Some(state_vec) = states.get_mut(&current_id) {
+                if let Some(last_vec) = state_vec.last_mut() {
+                    last_vec.push(point);
+                }
+            }
+        }
+        if line.starts_with("L") {
+            let coords = line[1..].split(",").collect::<Vec<&str>>();
+            let point = Point {
+                x: coords[0].parse().unwrap(),
+                y: coords[0].parse().unwrap(),
+            };
+            if let Some(last_vec) = states.get_mut(&current_id) {
+                if let Some(last_vec) = last_vec.last_mut() {
+                    last_vec.push(point);
+                }
+            }
+        }
+        if line.starts_with("H") {
+            let coords = line[1..].split(",").collect::<Vec<&str>>();
+            let last_point = states.get(&current_id).unwrap().last().unwrap().last().unwrap();
+            let point = Point {
+                x: coords[0].parse().unwrap(),
+                y: last_point.y,
+            };
+            if let Some(last_vec) = states.get_mut(&current_id) {
+                if let Some(last_vec) = last_vec.last_mut() {
+                    last_vec.push(point);
+                }
+            }
+        }
+        if line.starts_with("sodipodi:cx") {
+            if let Some(point) = cities.get_mut(&current_id) {
+                point.x = line.split("=").nth(1).unwrap().replace("\"", "").parse().unwrap();
+            }
+        }
+        if line.starts_with("sodipodi:cy") {
+            if let Some(point) = cities.get_mut(&current_id) {
+                point.y = line.split("=").nth(1).unwrap().replace("\"", "").parse().unwrap();
             }
         }
     }
-    println!("Time elapsed: {:?}", start.elapsed().unwrap().as_millis());
-    println!("Number of crosses: {}", number_of_crosses);
+
+    for (state, vec) in &states {
+        println!("{} ({:?})", state, vec.len());
+    }
+
+    for (city, point) in &cities {
+        println!("{} ({:?} {:?})", city, point.x, point.y);
+    }
 }
