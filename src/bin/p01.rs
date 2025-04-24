@@ -1,6 +1,8 @@
 use std::fs::read_to_string;
 use std::time::SystemTime;
 
+mod p01_unique_cases;
+
 // use core::f64::EPSILON; // => ~2.3E-16
 const EPSILON: f64 = 1E-12;
 
@@ -31,8 +33,6 @@ fn ccw(p: &Point, q: &Point, r: &Point) -> i32 {
         1
     }
 }
-
-impl Point {}
 
 pub struct Line {
     pub p1: Point,
@@ -150,4 +150,214 @@ fn main() {
     }
     println!("Time elapsed: {:?}", timer.elapsed().unwrap().as_millis());
     println!("Number of crosses: {}", number_of_crosses);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn case1() {
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        let l2 = Line::new(Point { x: 1.0, y: 0.0 }, Point { x: 1.0, y: 1.0 });
+        assert!(!l1.crosses(&l2));
+        assert!(!l2.crosses(&l1));
+    }
+
+    #[test]
+    fn case2() {
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        let l2 = Line::new(Point { x: 0.0, y: -1.0 }, Point { x: 1.0, y: 1.0 });
+        assert!(!l1.crosses(&l2));
+        assert!(!l2.crosses(&l1));
+    }
+
+    #[test]
+    fn case3() {
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        let l2 = Line::new(Point { x: -1.0, y: -1.0 }, Point { x: 1.0, y: -1.0 });
+        assert!(!l1.crosses(&l2));
+        assert!(!l2.crosses(&l1));
+    }
+
+    #[test]
+    fn case4() {
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        let l2 = Line::new(Point { x: 1.0, y: 1.0 }, Point { x: 1.0, y: 1.0 });
+        assert!(!l1.crosses(&l2));
+        assert!(!l2.crosses(&l1));
+    }
+
+    #[test]
+    fn case5() {
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        let l2 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 1.0, y: 1.0 });
+        assert!(l1.crosses(&l2));
+        assert!(l2.crosses(&l1));
+    }
+
+    #[test]
+    fn case6() {
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        let l2 = Line::new(Point { x: -1.0, y: 0.0 }, Point { x: 1.0, y: 0.0 });
+        assert!(l1.crosses(&l2));
+        assert!(l2.crosses(&l1));
+    }
+
+    #[test]
+    fn case7_9() {
+        // For all 4 coordinates of two lines, iterate over all points in a 7x7 lattice.
+        // Then calculate the minimized ccw values and check if one of them is the impossible one.
+        use p01_unique_cases::{Ccw, CcwCombination};
+        let impossible1 = CcwCombination {
+            ccw1: Ccw::Left,
+            ccw2: Ccw::Middle,
+            ccw3: Ccw::Middle,
+            ccw4: Ccw::Middle,
+        };
+        let impossible2 = CcwCombination {
+            ccw1: Ccw::Left,
+            ccw2: Ccw::Right,
+            ccw3: Ccw::Middle,
+            ccw4: Ccw::Middle,
+        };
+
+        for a in (0..7).map(f64::from) {
+            for b in (0..7).map(f64::from) {
+                for c in (0..7).map(f64::from) {
+                    for d in (0..8).map(f64::from) {
+                        for e in (0..7).map(f64::from) {
+                            for f in (0..7).map(f64::from) {
+                                for g in (0..7).map(f64::from) {
+                                    for h in (0..7).map(f64::from) {
+                                        let l1 =
+                                            Line::new(Point { x: a, y: b }, Point { x: c, y: d });
+                                        let l2 =
+                                            Line::new(Point { x: e, y: f }, Point { x: g, y: h });
+
+                                        let ccw1 = p01_unique_cases::Ccw::from(ccw(
+                                            &l1.p1, &l1.p2, &l2.p1,
+                                        ));
+                                        let ccw2 = p01_unique_cases::Ccw::from(ccw(
+                                            &l1.p1, &l1.p2, &l2.p2,
+                                        ));
+                                        let ccw3 = p01_unique_cases::Ccw::from(ccw(
+                                            &l2.p1, &l2.p2, &l1.p1,
+                                        ));
+                                        let ccw4 = p01_unique_cases::Ccw::from(ccw(
+                                            &l2.p1, &l2.p2, &l1.p2,
+                                        ));
+                                        let minimized_ccw_combi =
+                                            p01_unique_cases::CcwCombination {
+                                                ccw1,
+                                                ccw2,
+                                                ccw3,
+                                                ccw4,
+                                            }
+                                            .minimize();
+                                        assert!(minimized_ccw_combi != impossible1);
+                                        assert!(minimized_ccw_combi != impossible2);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn case8() {
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        let l2 = Line::new(Point { x: -1.0, y: 0.0 }, Point { x: 1.0, y: 1.0 });
+        assert!(l1.crosses(&l2));
+        assert!(l2.crosses(&l1));
+    }
+
+    #[test]
+    fn case10() {
+        // 2 "Point-Lines"
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 0.0 });
+        let l2 = Line::new(Point { x: 0.0, y: -1.0 }, Point { x: 0.0, y: -1.0 });
+        assert!(!l1.crosses(&l2));
+        assert!(!l2.crosses(&l1));
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 0.0 });
+        let l2 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 0.0 });
+        assert!(l1.crosses(&l2));
+        assert!(l2.crosses(&l1));
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 0.0 });
+        let l2 = Line::new(Point { x: 0.0, y: 1.0 }, Point { x: 0.0, y: 1.0 });
+        assert!(!l1.crosses(&l2));
+        assert!(!l2.crosses(&l1));
+
+        // 1 Line, 1 "Point-Line"
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 0.0 });
+        let l2 = Line::new(Point { x: 0.0, y: -2.0 }, Point { x: 0.0, y: -1.0 });
+        assert!(!l1.crosses(&l2));
+        assert!(!l2.crosses(&l1));
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 0.0 });
+        let l2 = Line::new(Point { x: 0.0, y: -2.0 }, Point { x: 0.0, y: 0.0 });
+        assert!(l1.crosses(&l2));
+        assert!(l2.crosses(&l1));
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 0.0 });
+        let l2 = Line::new(Point { x: 0.0, y: -2.0 }, Point { x: 0.0, y: 2.0 });
+        assert!(l1.crosses(&l2));
+        assert!(l2.crosses(&l1));
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 0.0 });
+        let l2 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 2.0 });
+        assert!(l1.crosses(&l2));
+        assert!(l2.crosses(&l1));
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 0.0 });
+        let l2 = Line::new(Point { x: 0.0, y: 1.0 }, Point { x: 0.0, y: 2.0 });
+        assert!(!l1.crosses(&l2));
+        assert!(!l2.crosses(&l1));
+
+        // 2 Lines
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        let l2 = Line::new(Point { x: 0.0, y: -1.0 }, Point { x: 0.0, y: -0.5 });
+        assert!(!l1.crosses(&l2));
+        assert!(!l2.crosses(&l1));
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        let l2 = Line::new(Point { x: 0.0, y: -0.5 }, Point { x: 0.0, y: 0.0 });
+        assert!(l1.crosses(&l2));
+        assert!(l2.crosses(&l1));
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        let l2 = Line::new(Point { x: 0.0, y: -0.25 }, Point { x: 0.0, y: 0.25 });
+        assert!(l1.crosses(&l2));
+        assert!(l2.crosses(&l1));
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        let l2 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 0.5 });
+        assert!(l1.crosses(&l2));
+        assert!(l2.crosses(&l1));
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        let l2 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        assert!(l1.crosses(&l2));
+        assert!(l2.crosses(&l1));
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        let l2 = Line::new(Point { x: 0.0, y: 0.25 }, Point { x: 0.0, y: 0.75 });
+        assert!(l1.crosses(&l2));
+        assert!(l2.crosses(&l1));
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        let l2 = Line::new(Point { x: 0.0, y: 0.5 }, Point { x: 0.0, y: 1.0 });
+        assert!(l1.crosses(&l2));
+        assert!(l2.crosses(&l1));
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        let l2 = Line::new(Point { x: 0.0, y: 0.75 }, Point { x: 0.0, y: 1.25 });
+        assert!(l1.crosses(&l2));
+        assert!(l2.crosses(&l1));
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        let l2 = Line::new(Point { x: 0.0, y: 1.0 }, Point { x: 0.0, y: 1.5 });
+        assert!(l1.crosses(&l2));
+        assert!(l2.crosses(&l1));
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        let l2 = Line::new(Point { x: 0.0, y: 1.5 }, Point { x: 0.0, y: 2.0 });
+        assert!(!l1.crosses(&l2));
+        assert!(!l2.crosses(&l1));
+
+        let l1 = Line::new(Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 });
+        let l2 = Line::new(Point { x: 0.0, y: -2.0 }, Point { x: 0.0, y: 2.0 });
+        assert!(l1.crosses(&l2));
+        assert!(l2.crosses(&l1));
+    }
 }
