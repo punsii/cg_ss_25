@@ -1,22 +1,33 @@
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-enum CCW {
+pub enum Ccw {
     Left = -1,
     Middle = 0,
     Right = 1,
 }
-impl CCW {
+impl Ccw {
     const VALUES: [Self; 3] = [Self::Left, Self::Middle, Self::Right];
+}
+impl From<i32> for Ccw {
+    fn from(i: i32) -> Self {
+        if i < 0 {
+            Ccw::Left
+        } else if i == 0 {
+            Ccw::Middle
+        } else {
+            Ccw::Right
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
-struct CcwCombination {
-    ccw1: CCW,
-    ccw2: CCW,
-    ccw3: CCW,
-    ccw4: CCW,
+pub struct CcwCombination {
+    pub ccw1: Ccw,
+    pub ccw2: Ccw,
+    pub ccw3: Ccw,
+    pub ccw4: Ccw,
 }
 impl CcwCombination {
-    fn minimize(&self) -> CcwCombination {
+    pub fn minimize(&self) -> CcwCombination {
         let mut ccw1 = self.ccw1;
         let mut ccw2 = self.ccw2;
         let mut ccw3 = self.ccw3;
@@ -34,21 +45,21 @@ impl CcwCombination {
         }
 
         // Mirror to the left
-        if ccw1 == CCW::Right {
-            ccw1 = CCW::Left;
-            ccw2 = CCW::Left;
+        if ccw1 == Ccw::Right {
+            ccw1 = Ccw::Left;
+            ccw2 = Ccw::Left;
         }
-        if ccw3 == CCW::Right {
-            ccw3 = CCW::Left;
-            ccw4 = CCW::Left;
+        if ccw3 == Ccw::Right {
+            ccw3 = Ccw::Left;
+            ccw4 = Ccw::Left;
         }
-        if ccw1 == CCW::Middle && ccw2 == CCW::Right {
-            ccw1 = CCW::Left;
-            ccw2 = CCW::Middle;
+        if ccw1 == Ccw::Middle && ccw2 == Ccw::Right {
+            ccw1 = Ccw::Left;
+            ccw2 = Ccw::Middle;
         }
-        if ccw3 == CCW::Middle && ccw4 == CCW::Right {
-            ccw3 = CCW::Left;
-            ccw4 = CCW::Middle;
+        if ccw3 == Ccw::Middle && ccw4 == Ccw::Right {
+            ccw3 = Ccw::Left;
+            ccw4 = Ccw::Middle;
         }
 
         if ccw1 > ccw3 || (ccw1 == ccw3 && ccw2 > ccw4) {
@@ -72,10 +83,10 @@ impl CcwCombination {
 
 fn main() {
     let mut all_cases: Vec<CcwCombination> = vec![];
-    for ccw1 in CCW::VALUES {
-        for ccw2 in CCW::VALUES {
-            for ccw3 in CCW::VALUES {
-                for ccw4 in CCW::VALUES {
+    for ccw1 in Ccw::VALUES {
+        for ccw2 in Ccw::VALUES {
+            for ccw3 in Ccw::VALUES {
+                for ccw4 in Ccw::VALUES {
                     all_cases.push(CcwCombination {
                         ccw1,
                         ccw2,
