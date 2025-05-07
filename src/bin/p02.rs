@@ -18,6 +18,27 @@ impl Point {
 
         self.x >= xmin && self.x <= xmax && self.y >= ymin && self.y <= ymax
     }
+
+    fn is_in_polygon(&self, polygon: &Vec<Point>) -> bool {
+        let point_not_in_polygon = Point{ x: -1.0, y: -1.0, };
+        let mut i = 1;
+        while ccw(&point_not_in_polygon, self, &polygon[i]) == 0 {
+            i += 1;
+        }
+        let mut s = 0;
+        let mut lr = ccw(&point_not_in_polygon, self, &polygon[i]);
+        for j in i+1..polygon.len() {
+            let lrnew = ccw(&point_not_in_polygon, self, &polygon[j]);
+            if (lrnew - lr).abs() == 2 {
+                lr = lrnew;
+                if ccw(&polygon[j-1], &polygon[j], &point_not_in_polygon)
+                    * ccw(&polygon[j-1], &polygon[j], self) <= 0 {
+                    s += 1;
+                }
+            }
+        }
+        s % 2 != 0
+    }
 }
 
 fn ccw(p: &Point, q: &Point, r: &Point) -> i32 {
@@ -111,6 +132,22 @@ fn read_file_rows(filename: &str) -> Vec<String> {
     result
 }
 
+fn calculate_area_polygon(points: &Vec<Point>) -> f64 {
+    let mut area: f64 = 0.0;
+    let point_zero = Point{ x: 0.0, y: 0.0, };
+    for n in 0..points.len() - 1 {
+        area += calculate_area_triangle(&point_zero, &points[n], &points[n+1]);
+    }
+    area
+}
+
+fn calculate_area_triangle(point_0: &Point, point_1: &Point, point_2: &Point) -> f64 {
+    let area: f64 = point_0.y * (point_2.x - point_1.x) / 2.0
+                  + point_1.y * (point_0.x - point_2.x) / 2.0
+                  + point_2.y * (point_1.x - point_0.x) / 2.0;
+    area
+}
+
 fn main() {
     let mut states: HashMap<String, Vec<Vec<Point>>> = HashMap::new();
     let mut cities: HashMap<String, Point> = HashMap::new();
@@ -119,15 +156,15 @@ fn main() {
     let data = read_file_rows(path);
     for mut line in data {
         line = line.trim().to_string();
-        if line.contains("id=") {
+        if line.contains("id=") && !line.contains("svg") {
             current_id = line.split("id=").nth(1).unwrap()
                              .split(" ").nth(0).unwrap()
                              .replace("\"", "")
                              .parse().unwrap();
-            if line.contains("path") {
-                states.insert(current_id.clone(), Vec::new());
-            } else {
+            if line.starts_with("id=") {
                 cities.insert(current_id.clone(), Point{ x: 0.0, y: 0.0 });
+            } else {
+                states.insert(current_id.clone(), Vec::new());
             }
         }
         if line.starts_with("M") {
@@ -160,7 +197,7 @@ fn main() {
             let coords = line[1..].split(",").collect::<Vec<&str>>();
             let point = Point {
                 x: coords[0].parse().unwrap(),
-                y: coords[0].parse().unwrap(),
+                y: coords[1].parse().unwrap(),
             };
             if let Some(last_vec) = states.get_mut(&current_id) {
                 if let Some(last_vec) = last_vec.last_mut() {
@@ -194,10 +231,44 @@ fn main() {
     }
 
     for (state, vec) in &states {
-        println!("{} ({:?})", state, vec.len());
+        let mut area = 0.0;
+        for (index, points) in vec.iter().enumerate() {
+            let area_polygon = calculate_area_polygon(&points);
+            let mut is_in_polygon = false;
+            if index > 0 {
+                is_in_polygon = points[0].is_in_polygon(vec.get(0).unwrap());
+                if is_in_polygon {
+                    area -= area_polygon.abs();
+                } else {
+                    area += area_polygon.abs();
+                }
+            } else {
+                area += area_polygon.abs();
+            }
+            // println!("{} ({})", area_polygon, is_in_polygon);
+        }
+        println!("{} ({:?})", state, area);
     }
 
+    println!();
+
     for (city, point) in &cities {
-        println!("{} ({:?} {:?})", city, point.x, point.y);
+        // println!("city {}", city);
+        let mut state_of_city = "";
+        for (state, vec) in &states {
+            // println!("state {}", state);
+            let mut in_polygons = 0;
+            for (index, points) in vec.iter().enumerate() {
+                if point.is_in_polygon(points) {
+                    println!("{} -> {} ({})", city, state, index);
+                    in_polygons += 1;
+                }
+            }
+            if in_polygons % 2 == 1 {
+                state_of_city = state;
+                break;
+            }
+        }
+        println!("{} ({})", city, state_of_city);
     }
 }
