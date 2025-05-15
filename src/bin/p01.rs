@@ -1,44 +1,10 @@
-use std::fs::read_to_string;
 use std::time::SystemTime;
 
-use cg_ss_25::lib::{line::Line, point::Point};
-
-fn string_to_line(string: String) -> Line {
-    let numbers: Vec<f64> = string
-        .split(&" ")
-        .map(|word| word.parse::<f64>().unwrap())
-        .collect::<Vec<f64>>();
-    Line::new(
-        Point {
-            x: numbers[0],
-            y: numbers[1],
-        },
-        Point {
-            x: numbers[2],
-            y: numbers[3],
-        },
-    )
-}
-
-fn read_file_rows(filename: &str) -> Vec<String> {
-    let mut result = Vec::new();
-
-    for row in read_to_string(filename).unwrap().lines() {
-        result.push(row.to_string())
-    }
-
-    result
-}
+use cg_ss_25::lib::data::read_lines_from_file;
 
 fn main() {
-    let rows = read_file_rows("../data/01/s_1000_1.dat");
-
     let print_each_check = false;
-
-    let mut lines: Vec<Line> = Vec::new();
-    for row in rows {
-        lines.push(string_to_line(row))
-    }
+    let lines = read_lines_from_file("../data/01/s_1000_1.dat");
 
     let mut number_of_crosses = 0;
 
@@ -73,8 +39,11 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use cg_ss_25::lib::ccw::{ccw, Ccw, CcwCombination};
+    use cg_ss_25::lib::{
+        ccw::{ccw, Ccw, CcwCombination},
+        line::Line,
+        point::Point,
+    };
 
     #[test]
     fn case1() {
