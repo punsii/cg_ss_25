@@ -1,8 +1,4 @@
-use crate::lib::{
-    point::Point,
-    common::EPSILON,
-};
-
+use crate::lib::{common::EPSILON, point::Point};
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub enum Ccw {
@@ -98,4 +94,3 @@ pub fn ccw(p: &Point, q: &Point, r: &Point) -> i32 {
         1
     }
 }
-

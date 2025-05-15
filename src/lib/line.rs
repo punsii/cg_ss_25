@@ -1,7 +1,4 @@
-use crate::lib::{
-    point::Point,
-    ccw::ccw
-};
+use crate::lib::{ccw::ccw, point::Point};
 
 pub struct Line {
     pub p1: Point,
