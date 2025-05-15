@@ -143,7 +143,12 @@ fn main() {
 
     for (state, vec) in &states {
         let mut area = 0.0;
+        let mut bounding_area = 0.0;
         for (index, points) in vec.iter().enumerate() {
+            let mut min_x = f64::MAX;
+            let mut min_y = f64::MAX;
+            let mut max_x = f64::MIN;
+            let mut max_y = f64::MIN;
             let area_polygon = calculate_area_polygon(&points);
             let is_in_polygon;
             if index > 0 {
@@ -156,9 +161,21 @@ fn main() {
             } else {
                 area += area_polygon.abs();
             }
-            // println!("{} ({})", area_polygon, is_in_polygon);
+            for point in points {
+                if &point.x < &min_x {
+                    min_x = point.x.clone();
+                } else if &point.x > &max_x {
+                    max_x = point.x.clone();
+                }
+                if &point.y < &min_y {
+                    min_y = point.y.clone();
+                } else if &point.y > &max_y {
+                    max_y = point.y.clone();
+                }
+            }
+            bounding_area += (max_x - min_x) * (max_y - min_y);
         }
-        println!("{} ({:?})", state, area);
+        println!("{} {:.3?} ({:.3?})", state, area, bounding_area);
     }
 
     println!();
