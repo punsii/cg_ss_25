@@ -5,5 +5,6 @@ authors = ["Paul Menhart"]
 edition = "2021"
 
 [dependencies]
+qhull = "0.4.0"
 
 [dev-dependencies]
