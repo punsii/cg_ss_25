@@ -47,6 +47,7 @@
             "p01_unique_cases"
             "p02"
             "p03"
+            "p04"
           ]
       );
     in
