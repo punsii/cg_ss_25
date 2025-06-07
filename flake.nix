@@ -28,26 +28,32 @@
         inherit system;
       };
 
-
       cg_ss_25 = pkgs.callPackage ./default.nix { };
 
-      main = {
-        type = "app";
-        program = "${self.packages.${system}.default}/bin/cg_ss_25";
-      };
-      p01 = {
-        type = "app";
-        program = "${self.packages.${system}.default}/bin/01";
-      };
-
+      apps = builtins.listToAttrs (
+        builtins.map
+          (
+            name: {
+              inherit name;
+              value = {
+                type = "app";
+                program = "${self.packages.${system}.default}/bin/${name}";
+              };
+            }
+          )
+          [
+            "main"
+            "p01"
+            "p01_unique_cases"
+            "p02"
+            "p03"
+          ]
+      );
     in
     {
       packages.${system}.default = cg_ss_25;
 
-      apps.${system} = {
-        inherit main p01;
-        default = main;
-      };
+      apps.${system} = apps;
 
       devShells.${system} = {
         default = pkgs.mkShell {
