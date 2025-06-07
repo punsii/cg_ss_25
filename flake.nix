@@ -68,6 +68,8 @@
               rust-analyzer
               rustc
               rustfmt
+            ] ++ [
+              self.packages.${system}.default
             ];
         };
       };
