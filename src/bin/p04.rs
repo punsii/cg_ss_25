@@ -4,53 +4,50 @@ use std::{
     str,
 };
 
+const TWO: i32 = 2;
 const OUT_PATH: &str = "./plots";
-const REPETITIONS: u8 = 3;
-const N_POINTS: &[u32] = &[10, 100];
-const DIMENSIONS: &[u8] = &[2, 3, 4, 5, 6];
+const REPETITIONS: i32 = 5;
+const MIN_NUM_POINT_EXPONENT: i32 = 4;
+const MAX_NUM_POINT_EXPONENT: i32 = 11;
+const DIMENSIONS: &[i32] = &[2, 3, 4, 5, 6];
 const DISTRIBUTIONS: &[Distribution] = &[
     Distribution {
         // "c", // add a unit cube to the output ('c G2.0' sets size)
         name: "UnitCube",
         flag: 'c',
     },
-    // Distribution {
-    //     // "d", // add a unit diamond to the output ('d G2.0' sets size)
-    //     name: "UnitDiamond",
-    //     flag: 'd',
-    // },
-    // Distribution {
-    //     //     "l", // generate a regular 3-d spiral
-    //     name: "3dSpiral",
-    //     flag: 'l',
-    // },
+    Distribution {
+        // "d", // add a unit diamond to the output ('d G2.0' sets size)
+        name: "UnitDiamond",
+        flag: 'd',
+    },
     // Distribution {
     //     //     "r", // generate a regular polygon, ('r s Z1 G0.1' makes a cone)
     //     name: "regularPolygon",
     //     flag: 'r',
     // },
-    // Distribution {
-    //     //     "s", // generate cospherical points
-    //     name: "Cospherical",
-    //     flag: 's',
-    // },
-    // Distribution {
-    //     //     "x", // generate random points in simplex, may use 'r' or 'Wn'
-    //     name: "Simplex",
-    //     flag: 'x',
-    // },
-    // Distribution {
-    //     //     "y", // same as 'x', plus simplex
-    //     name: "SimplexSimplex?",
-    //     flag: 'y',
-    // },
+    Distribution {
+        //     "s", // generate cospherical points
+        name: "Cospherical",
+        flag: 's',
+    },
+    Distribution {
+        //     "x", // generate random points in simplex, may use 'r' or 'Wn'
+        name: "Simplex",
+        flag: 'x',
+    },
+    Distribution {
+        //     "y", // same as 'x', plus simplex
+        name: "SimplexSimplex?",
+        flag: 'y',
+    },
 ];
 
 #[derive(Debug)]
 struct TestResult {
-    n_points: u32,
-    dimension: u8,
-    seconds: f32,
+    n_points_power: i32,
+    dimension: i32,
+    seconds: f64,
 }
 
 #[derive(Debug)]
@@ -59,7 +56,7 @@ struct Distribution<'a> {
     flag: char,
 }
 
-fn point_generator(distribution_flag: char, n_points: &u32, dimension: &u8) -> std::process::Child {
+fn point_generator(distribution_flag: char, n_points: i32, dimension: i32) -> std::process::Child {
     // generate random points
     let points_stream = Command::new("rbox")
         .arg(n_points.to_string())
@@ -71,7 +68,7 @@ fn point_generator(distribution_flag: char, n_points: &u32, dimension: &u8) -> s
     points_stream
 }
 
-fn measure_qhull_runtime(points_stream: std::process::Child) -> f32 {
+fn measure_qhull_runtime(points_stream: std::process::Child) -> f64 {
     let qhull = Command::new("qhull")
         .stdin(Stdio::from(points_stream.stdout.unwrap()))
         .stdout(Stdio::piped())
@@ -82,61 +79,126 @@ fn measure_qhull_runtime(points_stream: std::process::Child) -> f32 {
 
     return result
         .split("\n")
-        .filter(|s| !s.is_empty())
-        .last()
+        .find(|s| s.contains("CPU seconds to compute hull"))
         .unwrap()
         .split(" ")
         .last()
         .unwrap()
         .to_string()
-        .parse::<f32>()
-        .unwrap();
+        .parse::<f64>()
+        .expect(&format!("Could not parse time from output: {:?}", result));
 }
 
-fn get_data_point(n_points: u32, dimensions: u8, distribution_results: &Vec<TestResult>) -> f32 {
+fn get_data_point(
+    n_point_power: i32,
+    dimensions: i32,
+    distribution_results: &Vec<TestResult>,
+) -> f64 {
     distribution_results
         .into_iter()
-        .filter(|test_result| test_result.n_points == n_points)
+        .filter(|test_result| test_result.n_points_power == n_point_power)
         .filter(|test_result| test_result.dimension == dimensions)
         // map reduce implementation of the average execution time
         .map(|test_result| (1, test_result.seconds))
         .reduce(|accumulator, element| (accumulator.0 + element.0, accumulator.1 + element.1))
-        .map(|accumulator| accumulator.1 / accumulator.0 as f32)
+        .map(|accumulator| accumulator.1 / accumulator.0 as f64)
         .unwrap()
 }
 
-fn save_plot(distribution_name: &str, distribution_results: Vec<TestResult>) {
-    println!("{:?}", get_data_point(10, 3, &distribution_results));
-    println!("{:?}", distribution_name);
-    println!("{:?}", distribution_results[0].n_points);
-    println!("{:?}", distribution_results[0].dimension);
-    println!("{:?}", distribution_results[0].seconds);
-    println!("{:?}", OUT_PATH);
+fn save_plot(
+    distribution_name: &str,
+    distribution_results: Vec<TestResult>,
+    n_point_powers: &Vec<i32>,
+) {
+    let out_file_name = format!("{OUT_PATH}/{distribution_name}.svg");
+
+    let plot = SVGBackend::new(&out_file_name, (1024, 760)).into_drawing_area();
+    plot.fill(&WHITE).unwrap();
+
+    let z_max = distribution_results
+        .iter()
+        .map(|r| r.seconds)
+        .fold(f64::NEG_INFINITY, f64::max);
+
+    let mut chart = ChartBuilder::on(&plot)
+        .caption(distribution_name, ("sans-serif", 20))
+        .build_cartesian_3d(
+            *n_point_powers.iter().min().unwrap()..*n_point_powers.iter().max().unwrap(), // x = n_points
+            (0.0..z_max).step(z_max / 30.0), // y = seconds
+            *DIMENSIONS.iter().min().unwrap()..*DIMENSIONS.iter().max().unwrap(), // z = dimensions
+        )
+        .unwrap();
+    chart.with_projection(|mut p| {
+        // p.pitch = 1.3;
+        p.yaw = 0.5 + 1.0 * 3.14;
+        p.scale = 0.8;
+        p.into_matrix()
+    });
+
+    chart
+        .configure_axes()
+        .label_style(("Calibri", 15))
+        // .light_grid_style(BLACK.mix(0.15))
+        // .max_light_lines(3)
+        // .axis_panel_style(GREEN.mix(0.1))
+        .x_formatter(&|x| format!("x=2^{:?}", x))
+        .z_formatter(&|z| format!("y={z}"))
+        .y_formatter(&|y| format!("z={:.3}", y))
+        .draw()
+        .unwrap();
+
+    chart
+        .draw_series(
+            SurfaceSeries::xoz(
+                n_point_powers.iter().map(|x| *x),
+                DIMENSIONS.iter().map(|y| *y),
+                |n_point_powers, dimensions| {
+                    get_data_point(n_point_powers, dimensions, &distribution_results)
+                },
+            )
+            .style_func(&|&v| (VulcanoHSL::get_color(v / z_max)).into()),
+        )
+        .unwrap();
+
+    plot.present().unwrap();
+
+    // To avoid the IO failure being ignored silently, we manually call the present function
+    plot.present().expect("Unable to write result to file, please make sure 'plotters-doc-data' dir exists under current dir");
+    println!("Result has been saved to {}", &out_file_name);
 }
 
 fn main() {
+    let n_point_powers: Vec<i32> = (MIN_NUM_POINT_EXPONENT..MAX_NUM_POINT_EXPONENT).collect();
+
     for distribution in DISTRIBUTIONS.into_iter() {
         let mut distribution_results: Vec<TestResult> = Vec::new();
+        println!(
+            "Generating points with distribution: {:?}.",
+            distribution.name
+        );
 
-        for n_points in N_POINTS.into_iter() {
-            for dimension in DIMENSIONS.into_iter() {
+        for dimension in DIMENSIONS.into_iter() {
+            println!("Calculating hull for {:?} dimensions.", dimension);
+            for n_point_power in n_point_powers.clone().into_iter() {
+                let n_points = TWO.pow(n_point_power as u32);
+                print!("Points: {:?} | ", n_points);
                 for _ in 0..REPETITIONS {
-                    let points_stream = point_generator(distribution.flag, n_points, dimension);
+                    let points_stream = point_generator(distribution.flag, n_points, *dimension);
 
                     let time = measure_qhull_runtime(points_stream);
-                    // println!("{:?}", time);
+                    print!("{:?}s ", time);
 
-                    // print!("\n\n\n\n\n\n\n\n\n");
                     distribution_results.push(TestResult {
-                        n_points: *n_points,
+                        n_points_power: n_point_power,
                         dimension: *dimension,
                         seconds: time,
                     });
                 }
+                print!("\n");
             }
+            print!("\n\n");
         }
-        println!("{:?}", distribution_results);
-
-        save_plot(distribution.name, distribution_results);
+        save_plot(distribution.name, distribution_results, &n_point_powers);
+        print!("\n\n\n");
     }
 }
