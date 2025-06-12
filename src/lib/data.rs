@@ -1,10 +1,7 @@
+use crate::lib::{line::Line, point::Point};
 use std::fs::read_to_string;
-use crate::lib::{
-    line::Line,
-    point::Point
-};
 
-pub fn read_lines_from_file(path: &str) -> Vec<Line>  {
+pub fn read_lines_from_file(path: &str) -> Vec<Line> {
     let rows = read_file_rows(path);
 
     let mut lines: Vec<Line> = Vec::new();

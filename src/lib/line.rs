@@ -1,5 +1,6 @@
 use crate::lib::{ccw::ccw, point::Point};
 
+#[derive(Clone, Debug)]
 pub struct Line {
     pub p1: Point,
     pub p2: Point,

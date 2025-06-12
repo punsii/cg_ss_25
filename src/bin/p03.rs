@@ -1,22 +1,78 @@
-use cg_ss_25::lib::data::read_lines_from_file;
+use cg_ss_25::lib::{
+    common::EPSILON,
+    data::read_lines_from_file,
+    event::{Event, EventHeap},
+};
+use ordered_float::NotNan;
+use std::collections::BinaryHeap;
+use std::f64::INFINITY;
 
-// fn calculate_area_polygon(points: &Vec<Point>) -> f64 {
-//     let mut area: f64 = 0.0;
-//     let point_zero = Point { x: 0.0, y: 0.0 };
-//     for n in 0..points.len() - 1 {
-//         area += calculate_area_triangle(&point_zero, &points[n], &points[n + 1]);
-//     }
-//     area
-// }
-//
-// fn calculate_area_triangle(point_0: &Point, point_1: &Point, point_2: &Point) -> f64 {
-//     let area: f64 = point_0.y * (point_2.x - point_1.x) / 2.0
-//         + point_1.y * (point_0.x - point_2.x) / 2.0
-//         + point_2.y * (point_1.x - point_0.x) / 2.0;
-//     area
-// }
+fn get_next_event(
+    start_events: &mut EventHeap,
+    end_events: &mut EventHeap,
+    vertical_events: &mut EventHeap,
+) -> Option<Event> {
+    let mut min_x = NotNan::new(INFINITY).unwrap();
+    let mut min_index = -1;
+    match start_events.peek() {
+        Some(event) => {
+            if event.x.0 < min_x {
+                min_x = event.x.0;
+                min_index = 0;
+            }
+        }
+        None => {}
+    }
+    match end_events.peek() {
+        Some(event) => {
+            if event.x.0 < min_x {
+                min_x = event.x.0;
+                min_index = 1;
+            }
+        }
+        None => {}
+    }
+    match vertical_events.peek() {
+        Some(event) => {
+            if event.x.0 < min_x {
+                // min_x = event.x.0;
+                min_index = 2;
+            }
+        }
+        None => {}
+    }
+
+    match min_index {
+        0 => Some(start_events.pop().unwrap()),
+        1 => Some(end_events.pop().unwrap()),
+        2 => Some(vertical_events.pop().unwrap()),
+        _ => None,
+    }
+}
 
 fn main() {
     let lines = read_lines_from_file("../data/01/s_1000_1.dat");
-    println!("{:?}", lines[0].p1.x);
+
+    // These are min heaps
+    // => They are sorted while inserting and always pop the smallest element first
+    let mut start_events: EventHeap = BinaryHeap::new();
+    let mut end_events: EventHeap = BinaryHeap::new();
+    let mut vertical_events: EventHeap = BinaryHeap::new();
+
+    for line in &lines {
+        let delta = (line.p1.x - line.p2.x).abs();
+
+        if delta > EPSILON {
+            start_events.push(Event::new(line.p1.x.min(line.p2.x), line.clone()));
+            end_events.push(Event::new(line.p1.x.max(line.p2.x), line.clone()));
+        } else {
+            vertical_events.push(Event::new(line.p1.x, line.clone()));
+        }
+    }
+
+    while let Some(event) = get_next_event(&mut start_events, &mut end_events, &mut vertical_events)
+    {
+        // Handle events here
+        println!("{:?}", event.x.0);
+    }
 }
