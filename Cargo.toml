@@ -6,6 +6,7 @@ edition = "2021"
 
 [dependencies]
 derivative = "2.2.0"
+good_lp = "1.14.0"
 ordered-float = "5.0.0"
 plotters = "0.3.7"
 
