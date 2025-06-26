@@ -8,5 +8,5 @@ pkgs.rustPlatform.buildRustPackage {
     lockFile = ./Cargo.lock;
   };
   nativeBuildInputs = with pkgs; [ cmake pkg-config freetype expat fontconfig ];
-  buildInputs = with pkgs; [ fontconfig ];
+  buildInputs = with pkgs; [ fontconfig libcbc ];
 }

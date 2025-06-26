@@ -26,6 +26,72 @@
 
       pkgs = import nixpkgs {
         inherit system;
+        overlays = [
+          (final: prev: {
+            inherit libcbc;
+          })
+        ];
+      };
+
+      osi-clp = pkgs.stdenv.mkDerivation {
+        pname = "osi-clp";
+        version = "999";
+
+        src = pkgs.fetchFromGitHub {
+          owner = "alicevision";
+          repo = "osi_clp";
+          rev = "b4ef9610c2ac058bf508ee9574511726c5bc5a1e";
+          hash = "sha256-0Sz4/7CRKrArIUy/XxGIP7WMmICqDJ0VxZo62thChYQ=";
+        };
+
+        nativeBuildInputs = with pkgs; [
+          pkg-config
+        ];
+        buildInputs = with pkgs; [
+          cgl
+          clp
+          coin-utils
+          osi
+        ];
+
+        #   meta = {
+        # description = "";
+        # homepage = "";
+        # license = lib.licenses.;
+        # maintainers = with lib.maintainers;
+        # [  ];
+        # };
+      };
+
+      libcbc = pkgs.stdenv.mkDerivation {
+        pname = "libcbc";
+        version = "2.10.12";
+
+        src = pkgs.fetchFromGitHub {
+          owner = "coin-or";
+          repo = "Cbc";
+          rev = "782d275a8efa569eb818551561b424948e19653c";
+          hash = "sha256-0Sz4/7CRKrArIUy/XxGIP7WMmICqDJ0VxZo62thChYQ=";
+        };
+
+        nativeBuildInputs = with pkgs; [
+          pkg-config
+        ];
+        buildInputs = with pkgs; [
+          cgl
+          clp
+          coin-utils
+          osi
+          osi-clp
+        ];
+
+        #   meta = {
+        # description = "";
+        # homepage = "";
+        # license = lib.licenses.;
+        # maintainers = with lib.maintainers;
+        # [  ];
+        # };
       };
 
       cg_ss_25 = pkgs.callPackage ./default.nix { };
@@ -53,7 +119,10 @@
       );
     in
     {
-      packages.${system}.default = cg_ss_25;
+      packages.${system} = {
+        inherit cg_ss_25 osi-clp libcbc;
+        default = cg_ss_25;
+      };
 
       apps.${system} = apps;
 
@@ -70,6 +139,7 @@
               rust-analyzer
               rustc
               rustfmt
+              osi-clp
             ] ++ [
               self.packages.${system}.default
             ];
