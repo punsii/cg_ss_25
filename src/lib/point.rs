@@ -1,6 +1,7 @@
-use crate::lib::{ccw::ccw, line::Line};
+use crate::lib::ccw::ccw;
+use crate::lib::line::Line;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Point {
     pub x: f64,
     pub y: f64,

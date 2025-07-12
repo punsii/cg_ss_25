@@ -40,7 +40,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use cg_ss_25::lib::{
-        ccw::{ccw, Ccw, CcwCombination},
+        ccw::{Ccw, CcwCombination, ccw},
         line::Line,
         point::Point,
     };

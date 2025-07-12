@@ -100,7 +100,7 @@ pub fn ccw(p: &Point, q: &Point, r: &Point) -> i32 {
 }
 
 pub fn crossing_point(a1: &Point, a2: &Point, b1: &Point, b2: &Point) -> Point {
-    if a1.x == b1.x && a2.x == b2.x && a1.y == b1.y && b2.y == b2.y {
+    if a1 == b1 && a2 == b2 {
         return a1.clone();
     }
     if a1.x == a2.x && a1.y == a2.y {
@@ -110,9 +110,12 @@ pub fn crossing_point(a1: &Point, a2: &Point, b1: &Point, b2: &Point) -> Point {
     }
     let d1 = ccw_value(b1, a1, b2).abs();
     let d2 = ccw_value(b2, a2, b1).abs();
-    let b1_b2 = ((b2.x-b1.x)*(b2.x-b1.x) + (b2.y-b1.y)*(b2.y-b1.y)).sqrt();
+    let b1_b2 = ((b2.x - b1.x) * (b2.x - b1.x) + (b2.y - b1.y) * (b2.y - b1.y)).sqrt();
     let h1 = d1 / b1_b2;
     let h2 = d2 / b1_b2;
     let factor = h1 / (h1 + h2);
-    Point { x: a1.x + (a2.x-a1.x) * factor, y: a1.y + (a2.y-a1.y) * factor }
+    Point {
+        x: a1.x + (a2.x - a1.x) * factor,
+        y: a1.y + (a2.y - a1.y) * factor,
+    }
 }
