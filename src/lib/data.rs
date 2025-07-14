@@ -9,10 +9,10 @@ pub fn read_polygon_from_file(path: &str) -> Vec<Point> {
         points.push(string_to_point(row))
     }
     if points.first().unwrap() != points.last().unwrap() {
-        points.push(points.first().unwrap().clone());
+        points.push(*points.first().unwrap());
     }
 
-    return points;
+    points
 }
 
 pub fn read_lines_from_file(path: &str) -> Vec<Line> {
@@ -22,7 +22,7 @@ pub fn read_lines_from_file(path: &str) -> Vec<Line> {
     for row in rows {
         lines.push(string_to_line(row))
     }
-    return lines;
+    lines
 }
 
 fn string_to_point(string: String) -> Point {
@@ -31,10 +31,10 @@ fn string_to_point(string: String) -> Point {
         .filter(|s| !s.is_empty())
         .map(|word| word.parse::<f64>().unwrap())
         .collect::<Vec<f64>>();
-    return Point {
+    Point {
         x: numbers[0],
         y: numbers[1],
-    };
+    }
 }
 
 fn string_to_line(string: String) -> Line {

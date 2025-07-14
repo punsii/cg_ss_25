@@ -1,6 +1,6 @@
-use std::cmp::Ordering;
 use crate::lib::common::EPSILON;
 use crate::lib::line::Line;
+use std::cmp::Ordering;
 
 #[derive(Clone, Debug)]
 pub struct LineWithOrd {

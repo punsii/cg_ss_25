@@ -1,4 +1,4 @@
-use std::time::{Instant, SystemTime};
+use std::time::Instant;
 
 use cg_ss_25::lib::data::read_lines_from_file;
 
@@ -13,7 +13,10 @@ fn main() {
 
     for file in files {
         // let lines = read_lines_from_file("../data/01/s_1000_10.dat");
-        println!("{}", file.split("/").last().unwrap().split(".").nth(0).unwrap());
+        println!(
+            "{}",
+            file.split("/").last().unwrap().split(".").next().unwrap()
+        );
         let lines = read_lines_from_file(file);
 
         let mut number_of_crosses = 0;

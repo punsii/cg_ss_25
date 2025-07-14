@@ -1,3 +1,7 @@
+use cg_ss_25::lib::ccw::crossing_point;
+use cg_ss_25::lib::event::EventType;
+use cg_ss_25::lib::event::EventType::{End, Intersection, Start};
+use cg_ss_25::lib::line_with_ord::LineWithOrd;
 use cg_ss_25::lib::{
     common::EPSILON,
     data::read_lines_from_file,
@@ -5,10 +9,6 @@ use cg_ss_25::lib::{
 };
 use std::collections::{BTreeSet, BinaryHeap};
 use std::time::Instant;
-use cg_ss_25::lib::ccw::crossing_point;
-use cg_ss_25::lib::event::EventType;
-use cg_ss_25::lib::event::EventType::{End, Intersection, Start};
-use cg_ss_25::lib::line_with_ord::LineWithOrd;
 
 fn treat_left_endpoint(
     event: &Event,
@@ -28,7 +28,11 @@ fn treat_left_endpoint(
         if line.crosses(&above_seg.line) {
             let p = crossing_point(&line.p1, &line.p2, &above_seg.line.p1, &above_seg.line.p2);
             if p.x > current_x {
-                event_queue.push(Event::new(p.clone().x, line.clone(), Intersection(p, line.clone(), above_seg.line.clone())));
+                event_queue.push(Event::new(
+                    p.x,
+                    line.clone(),
+                    Intersection(p, line.clone(), above_seg.line.clone()),
+                ));
             }
         }
     }
@@ -37,7 +41,11 @@ fn treat_left_endpoint(
         if line.crosses(&below_seg.line) {
             let p = crossing_point(&line.p1, &line.p2, &below_seg.line.p1, &below_seg.line.p2);
             if p.x > current_x {
-                event_queue.push(Event::new(p.clone().x, line.clone(), Intersection(p, line.clone(), below_seg.line.clone())));
+                event_queue.push(Event::new(
+                    p.x,
+                    line.clone(),
+                    Intersection(p, line.clone(), below_seg.line.clone()),
+                ));
             }
         }
     }
@@ -59,9 +67,18 @@ fn treat_right_endpoint(
 
     if let (Some(above_seg), Some(below_seg)) = (above, below) {
         if above_seg.line.crosses(&below_seg.line) {
-            let p = crossing_point(&above_seg.line.p1, &above_seg.line.p2, &below_seg.line.p1, &below_seg.line.p2);
+            let p = crossing_point(
+                &above_seg.line.p1,
+                &above_seg.line.p2,
+                &below_seg.line.p1,
+                &below_seg.line.p2,
+            );
             if p.x > current_x {
-                event_queue.push(Event::new(p.x, above_seg.line.clone(), EventType::Intersection(p, line.clone(), above_seg.line.clone())));
+                event_queue.push(Event::new(
+                    p.x,
+                    above_seg.line.clone(),
+                    EventType::Intersection(p, line.clone(), above_seg.line.clone()),
+                ));
             }
         }
     }
@@ -99,7 +116,11 @@ fn treat_intersection(
             if seg2.line.crosses(&a.line) {
                 let p = crossing_point(&seg2.line.p1, &seg2.line.p2, &a.line.p1, &a.line.p2);
                 if p.x > current_x {
-                    event_queue.push(Event::new(p.x, seg2.line.clone(), EventType::Intersection(p, seg2.line.clone(), seg1.line.clone())));
+                    event_queue.push(Event::new(
+                        p.x,
+                        seg2.line.clone(),
+                        EventType::Intersection(p, seg2.line.clone(), seg1.line.clone()),
+                    ));
                 }
             }
         }
@@ -109,7 +130,11 @@ fn treat_intersection(
             if seg1.line.crosses(&b.line) {
                 let p = crossing_point(&seg1.line.p1, &seg1.line.p2, &b.line.p1, &b.line.p2);
                 if p.x > current_x {
-                    event_queue.push(Event::new(p.x, seg1.line.clone(), EventType::Intersection(p, seg1.line.clone(), seg2.line.clone())));
+                    event_queue.push(Event::new(
+                        p.x,
+                        seg1.line.clone(),
+                        EventType::Intersection(p, seg1.line.clone(), seg2.line.clone()),
+                    ));
                 }
             }
         }
@@ -117,7 +142,6 @@ fn treat_intersection(
 }
 
 fn main() {
-
     let mut files = Vec::new();
     files.push("../data/01/s_1000_1.dat");
     files.push("../data/01/s_10000_1.dat");
@@ -126,7 +150,10 @@ fn main() {
 
     for file in files {
         let mut intersection_count = 0;
-        println!("{}", file.split("/").last().unwrap().split(".").nth(0).unwrap());
+        println!(
+            "{}",
+            file.split("/").last().unwrap().split(".").next().unwrap()
+        );
         let lines = read_lines_from_file(file);
 
         // The BinaryHeap is a min heap
@@ -158,7 +185,7 @@ fn main() {
                 Intersection(p, l1, l2) => {
                     intersection_count += 1;
                     treat_intersection(&event, &mut sweep_line, &mut event_queue, current_x)
-                },
+                }
             }
         }
         let duration = start_time.elapsed();
@@ -167,5 +194,4 @@ fn main() {
         println!("time: {:?}", duration);
         println!("number of segments: {}", number_of_segments);
     }
-
 }

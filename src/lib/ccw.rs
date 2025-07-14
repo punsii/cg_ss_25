@@ -101,12 +101,12 @@ pub fn ccw(p: &Point, q: &Point, r: &Point) -> i32 {
 
 pub fn crossing_point(a1: &Point, a2: &Point, b1: &Point, b2: &Point) -> Point {
     if a1 == b1 && a2 == b2 {
-        return a1.clone();
+        return *a1;
     }
     if a1.x == a2.x && a1.y == a2.y {
-        return a1.clone();
+        return *a1;
     } else if b1.x == b2.x && b1.y == b2.y {
-        return b1.clone();
+        return *b1;
     }
     let d1 = ccw_value(b1, a1, b2).abs();
     let d2 = ccw_value(b2, a2, b1).abs();

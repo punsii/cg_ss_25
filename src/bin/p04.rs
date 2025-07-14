@@ -77,7 +77,7 @@ fn measure_qhull_runtime(points_stream: std::process::Child) -> f64 {
     let output = qhull.wait_with_output().unwrap();
     let result = str::from_utf8(&output.stdout).unwrap();
 
-    return result
+    result
         .split("\n")
         .find(|s| s.contains("CPU seconds to compute hull"))
         .unwrap()
@@ -86,7 +86,7 @@ fn measure_qhull_runtime(points_stream: std::process::Child) -> f64 {
         .unwrap()
         .to_string()
         .parse::<f64>()
-        .expect(&format!("Could not parse time from output: {:?}", result));
+        .unwrap_or_else(|_| panic!("Could not parse time from output: {:?}", result))
 }
 
 fn get_data_point(
@@ -95,7 +95,7 @@ fn get_data_point(
     distribution_results: &Vec<TestResult>,
 ) -> f64 {
     distribution_results
-        .into_iter()
+        .iter()
         .filter(|test_result| test_result.n_points_power == n_point_power)
         .filter(|test_result| test_result.dimension == dimensions)
         // map reduce implementation of the average execution time
@@ -150,8 +150,8 @@ fn save_plot(
     chart
         .draw_series(
             SurfaceSeries::xoz(
-                n_point_powers.iter().map(|x| *x),
-                DIMENSIONS.iter().map(|y| *y),
+                n_point_powers.iter().copied(),
+                DIMENSIONS.iter().copied(),
                 |n_point_powers, dimensions| {
                     get_data_point(n_point_powers, dimensions, &distribution_results)
                 },
@@ -170,14 +170,14 @@ fn save_plot(
 fn main() {
     let n_point_powers: Vec<i32> = (MIN_NUM_POINT_EXPONENT..MAX_NUM_POINT_EXPONENT).collect();
 
-    for distribution in DISTRIBUTIONS.into_iter() {
+    for distribution in DISTRIBUTIONS.iter() {
         let mut distribution_results: Vec<TestResult> = Vec::new();
         println!(
             "Generating points with distribution: {:?}.",
             distribution.name
         );
 
-        for dimension in DIMENSIONS.into_iter() {
+        for dimension in DIMENSIONS.iter() {
             println!("Calculating hull for {:?} dimensions.", dimension);
             for n_point_power in n_point_powers.clone().into_iter() {
                 let n_points = TWO.pow(n_point_power as u32);
@@ -194,7 +194,7 @@ fn main() {
                         seconds: time,
                     });
                 }
-                print!("\n");
+                println!();
             }
             print!("\n\n");
         }

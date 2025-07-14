@@ -43,7 +43,7 @@ fn main() {
                 .nth(1)
                 .unwrap()
                 .split(" ")
-                .nth(0)
+                .next()
                 .unwrap()
                 .replace("\"", "")
                 .parse()
@@ -149,10 +149,10 @@ fn main() {
             let mut min_y = f64::MAX;
             let mut max_x = f64::MIN;
             let mut max_y = f64::MIN;
-            let area_polygon = calculate_area_polygon(&points);
+            let area_polygon = calculate_area_polygon(points);
             let is_in_polygon;
             if index > 0 {
-                is_in_polygon = points[0].is_in_polygon(vec.get(0).unwrap());
+                is_in_polygon = points[0].is_in_polygon(vec.first().unwrap());
                 if is_in_polygon {
                     area -= area_polygon.abs();
                 } else {
@@ -162,15 +162,15 @@ fn main() {
                 area += area_polygon.abs();
             }
             for point in points {
-                if &point.x < &min_x {
-                    min_x = point.x.clone();
-                } else if &point.x > &max_x {
-                    max_x = point.x.clone();
+                if point.x < min_x {
+                    min_x = point.x;
+                } else if point.x > max_x {
+                    max_x = point.x;
                 }
-                if &point.y < &min_y {
-                    min_y = point.y.clone();
-                } else if &point.y > &max_y {
-                    max_y = point.y.clone();
+                if point.y < min_y {
+                    min_y = point.y;
+                } else if point.y > max_y {
+                    max_y = point.y;
                 }
             }
             bounding_area += (max_x - min_x) * (max_y - min_y);
@@ -184,7 +184,7 @@ fn main() {
         let mut state_of_city = String::new();
         let mut possible_states: Vec<String> = Vec::new();
         for (state, vec) in &states {
-            for (_, points) in vec.iter().enumerate() {
+            for points in vec.iter() {
                 if point.is_in_polygon(points) {
                     possible_states.push(state.clone());
                 }

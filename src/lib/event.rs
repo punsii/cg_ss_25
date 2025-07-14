@@ -9,8 +9,8 @@ use derivative::Derivative;
 use ordered_float::NotNan;
 
 // Using cmp::Reverse causes the BinaryHeap to be a minHeap instead of a maxHeap
-use std::{cmp::Reverse, collections::BinaryHeap, fmt};
 use crate::lib::point::Point;
+use std::{cmp::Reverse, collections::BinaryHeap, fmt};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum EventType {
@@ -43,8 +43,8 @@ impl Event {
     pub fn new(x: f64, line: Line, event_type: EventType) -> Self {
         Self {
             x: Reverse(NotNan::new(x).unwrap()),
-            line: line,
-            event_type: event_type,
+            line,
+            event_type,
         }
     }
 }

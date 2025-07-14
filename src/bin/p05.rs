@@ -140,7 +140,7 @@ fn plot_results(
         // Line for normal + Arrowhead
         chart.draw_series(std::iter::once(PathElement::new(
             vec![(mid.x, mid.y), (end.x, end.y)],
-            normal_style.clone(),
+            normal_style,
         )))?;
         let dx = dir.x;
         let dy = dir.y;
@@ -159,7 +159,7 @@ fn plot_results(
             };
             chart.draw_series(std::iter::once(PathElement::new(
                 vec![(left.x, left.y), (end.x, end.y), (right.x, right.y)],
-                normal_style.clone(),
+                normal_style,
             )))?;
         }
     }
