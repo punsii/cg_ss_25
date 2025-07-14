@@ -1,40 +1,51 @@
-use std::time::SystemTime;
+use std::time::{Instant, SystemTime};
 
 use cg_ss_25::lib::data::read_lines_from_file;
 
 fn main() {
     let print_each_check = false;
-    let lines = read_lines_from_file("../data/01/s_1000_1.dat");
 
-    let mut number_of_crosses = 0;
+    let mut files = Vec::new();
+    files.push("../data/01/s_1000_1.dat");
+    files.push("../data/01/s_10000_1.dat");
+    files.push("../data/01/s_100000_1.dat");
+    files.push("../data/01/s_1000_10.dat");
 
-    let timer = SystemTime::now();
-    for i in 0..lines.len() - 1 {
-        for j in i + 1..lines.len() {
-            let line1 = &lines[i];
-            let line2 = &lines[j];
-            let crosses = line1.crosses(line2);
-            if crosses {
-                number_of_crosses += 1;
-            }
-            if print_each_check {
-                print!(
-                    "Line1: (({:?},{:?})({:?},{:?}))\n Line2: (({:?},{:?})({:?},{:?}))\n crosses: {:?}\n\n",
-                    line1.p1.x,
-                    line1.p1.y,
-                    line1.p2.x,
-                    line1.p2.y,
-                    line2.p1.x,
-                    line2.p1.y,
-                    line2.p2.x,
-                    line2.p2.y,
-                    crosses
-                );
+    for file in files {
+        // let lines = read_lines_from_file("../data/01/s_1000_10.dat");
+        println!("{}", file.split("/").last().unwrap().split(".").nth(0).unwrap());
+        let lines = read_lines_from_file(file);
+
+        let mut number_of_crosses = 0;
+
+        let timer = Instant::now();
+        for i in 0..lines.len() - 1 {
+            for j in i + 1..lines.len() {
+                let line1 = &lines[i];
+                let line2 = &lines[j];
+                let crosses = line1.crosses(line2);
+                if crosses {
+                    number_of_crosses += 1;
+                }
+                if print_each_check {
+                    print!(
+                        "Line1: (({:?},{:?})({:?},{:?}))\n Line2: (({:?},{:?})({:?},{:?}))\n crosses: {:?}\n\n",
+                        line1.p1.x,
+                        line1.p1.y,
+                        line1.p2.x,
+                        line1.p2.y,
+                        line2.p1.x,
+                        line2.p1.y,
+                        line2.p2.x,
+                        line2.p2.y,
+                        crosses
+                    );
+                }
             }
         }
+        println!("Time elapsed: {:?}", timer.elapsed());
+        println!("Number of crosses: {}", number_of_crosses);
     }
-    println!("Time elapsed: {:?}", timer.elapsed().unwrap().as_millis());
-    println!("Number of crosses: {}", number_of_crosses);
 }
 
 #[cfg(test)]
