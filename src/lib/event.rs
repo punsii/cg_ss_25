@@ -10,6 +10,14 @@ use ordered_float::NotNan;
 
 // Using cmp::Reverse causes the BinaryHeap to be a minHeap instead of a maxHeap
 use std::{cmp::Reverse, collections::BinaryHeap, fmt};
+use crate::lib::point::Point;
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum EventType {
+    Start,
+    End,
+    Intersection(Point, Line, Line),
+}
 
 pub type EventHeap = BinaryHeap<Event>;
 
@@ -20,6 +28,8 @@ pub struct Event {
     pub x: Reverse<NotNan<f64>>,
     #[derivative(PartialEq = "ignore", Ord = "ignore", PartialOrd = "ignore")]
     pub line: Line,
+    #[derivative(PartialEq = "ignore", Ord = "ignore", PartialOrd = "ignore")]
+    pub event_type: EventType,
 }
 
 impl fmt::Debug for Event {
@@ -30,10 +40,11 @@ impl fmt::Debug for Event {
 
 impl Event {
     // Helper for constructing an event withouth having to deal with NotNan / Reverse classes
-    pub fn new(x: f64, line: Line) -> Self {
+    pub fn new(x: f64, line: Line, event_type: EventType) -> Self {
         Self {
             x: Reverse(NotNan::new(x).unwrap()),
             line: line,
+            event_type: event_type,
         }
     }
 }
