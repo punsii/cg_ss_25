@@ -4,22 +4,30 @@ use crate::lib::{ccw::ccw, point::Point};
 pub struct Line {
     pub p1: Point,
     pub p2: Point,
-    pub n: Option<Point>,
+    pub n: Point,
+    pub a: f64,
 }
 
 impl Line {
     pub fn new(p1: Point, p2: Point) -> Line {
-        let x = p2.x - p2.y;
-        let y = p1.y - p1.x;
+        let dx = p2.x - p1.x;
+        let dy = p2.y - p1.y;
 
-        let a = p1.y * p2.x - p1.x * p2.y;
-        let n = if a > 0.0 {
-            Point { x, y }
-        } else {
-            Point { x: -x, y: -y }
-        };
+        let mut n = Point { x: -dy, y: dx }.normalize();
+        let mut a = n.x * p1.x + n.y * p1.y;
 
-        Line { p1, p2, n: Some(n) }
+        // Flip normal if pointing toward origin
+        if a < 0.0 {
+            n.x = -n.x;
+            n.y = -n.y;
+            a = -a;
+        }
+
+        Line { p1, p2, n, a }
+    }
+
+    pub fn point_distance(&self, point: Point) -> f64 {
+        self.n.x * point.x + self.n.y * point.y - self.a
     }
 
     pub fn crosses(&self, other: &Line) -> bool {
@@ -48,5 +56,11 @@ impl Line {
             || b == 0 && self.p2.is_in_boundary(other)
             || c == 0 && other.p1.is_in_boundary(self)
             || d == 0 && other.p2.is_in_boundary(self)
+    }
+
+    pub fn length(&self) -> f64 {
+        let dx = self.p2.x - self.p1.x;
+        let dy = self.p2.y - self.p1.y;
+        (dx * dx + dy * dy).sqrt()
     }
 }

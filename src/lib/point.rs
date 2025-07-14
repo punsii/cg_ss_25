@@ -1,7 +1,10 @@
 use crate::lib::ccw::ccw;
 use crate::lib::line::Line;
+use std::ops::Add;
+use std::ops::AddAssign;
+use std::ops::Sub;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Copy)]
 pub struct Point {
     pub x: f64,
     pub y: f64,
@@ -38,5 +41,67 @@ impl Point {
             }
         }
         s % 2 != 0
+    }
+
+    pub fn normalize(self) -> Self {
+        let len = (self.x * self.x + self.y * self.y).sqrt();
+        if len == 0.0 {
+            Self { x: 0.0, y: 0.0 }
+        } else {
+            Self {
+                x: self.x / len,
+                y: self.y / len,
+            }
+        }
+    }
+}
+
+impl AddAssign for Point {
+    fn add_assign(&mut self, other: Self) {
+        self.x += other.x;
+        self.y += other.y;
+    }
+}
+
+impl Add for Point {
+    type Output = Point;
+
+    fn add(self, other: Self) -> Self::Output {
+        Point {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
+    }
+}
+impl Sub for Point {
+    type Output = Point;
+
+    fn sub(self, other: Self) -> Self::Output {
+        Point {
+            x: self.x - other.x,
+            y: self.y - other.y,
+        }
+    }
+}
+
+impl Add<&Point> for Point {
+    type Output = Point;
+
+    fn add(self, other: &Point) -> Self::Output {
+        Point {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
+    }
+}
+
+impl Add for &Point {
+    type Output = Point;
+
+    fn add(self, other: Self) -> Self::Output {
+        Point {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
     }
 }
