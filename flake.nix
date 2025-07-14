@@ -135,11 +135,14 @@
               cargo
               clippy
               gcc
+              osi
+              osi-clp
+              pkg-config
+              fontconfig
               qhull
               rust-analyzer
               rustc
               rustfmt
-              osi-clp
             ] ++ [
               self.packages.${system}.default
             ];
